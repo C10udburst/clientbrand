@@ -1,7 +1,6 @@
 package cloudburst.clientbrand;
 
 import com.mojang.authlib.GameProfile;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -10,8 +9,8 @@ import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -21,7 +20,7 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 public class ClientBrand implements ModInitializer {
 	public static final String MODID = "clientbrand";
-	public static final Logger LOGGER = LogManager.getLogger(MODID);
+	public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
 	public static HashMap<UUID, String> clientBrands = new HashMap<>();
 
@@ -37,7 +36,7 @@ public class ClientBrand implements ModInitializer {
 				}
 				LOGGER.info("{} brand: {}", player, brand);
 			} catch (Exception e) {
-				LOGGER.error(e);
+				LOGGER.error("Error", e);
 			}
 			if (player != null) {
 				clientBrands.put(player.getUuid(), "unknown");
@@ -48,14 +47,14 @@ public class ClientBrand implements ModInitializer {
 			try {
 				clientBrands.remove(handler.player.getUuid());
 			} catch (Exception e) {
-				LOGGER.error(e);
+				LOGGER.error("Error", e);
 			}
 		});
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			if (dedicated) {
 				dispatcher.register(literal("brand").requires((source) -> {
-						return source.hasPermissionLevel(source.getServer().getFunctionPermissionLevel()) || Permissions.check(source.getEntity(), "clientbrand.check", 4);
+						return source.hasPermissionLevel(source.getServer().getFunctionPermissionLevel());
 					}).then(argument("player", GameProfileArgumentType.gameProfile()).executes(ctx -> {
 					for (GameProfile profile : GameProfileArgumentType.getProfileArgument(ctx, "player")) {
 						if (profile == null) continue;
